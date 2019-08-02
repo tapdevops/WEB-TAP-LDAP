@@ -1,0 +1,32 @@
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::get('/', function () {
+	return response()->json([
+		"message" => "Microservice LDAP"
+	]);
+});
+
+Route::post( '/login', 'AuthController@login' );
+Route::get( '/export', 'ExportController@index' );
+
+Route::get( '/sync/tr-land-use', 'ExportController@sync_tr_land_use' );
+Route::get( '/sync/tm-region', 'ExportController@sync_tm_region' );
+Route::get( '/sync/tm-est', 'ExportController@sync_tm_est' );
+Route::get( '/sync/tm-afd', 'ExportController@sync_tm_afd' );
+Route::get( '/sync/tm-block', 'ExportController@sync_tm_block' );
+Route::get( '/sync/tm-comp', 'ExportController@sync_tm_comp' );
+
+
+Route::get( '/export/tm-employee-hris', 'ExportController@sync_tm_employee_hris' );
+Route::get( '/export/tm-employee-sap', 'ExportController@sync_tm_employee_sap' );
