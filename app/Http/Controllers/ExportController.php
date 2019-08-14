@@ -20,7 +20,7 @@ class ExportController extends Controller {
 	protected $access_token;
 	
 	public function __construct() {
-		$this->env = 'qa';
+		$this->env = 'development';
 		$this->tap_dw = ( $this->env == 'production' ? DB::connection( 'prod_tap_dw' ) : DB::connection( 'dev_tap_dw' ) );
 		$this->tapapps_mobile_estate = ( $this->env == 'production' ? DB::connection( 'prod_tapapps_mobile_estate' ) : DB::connection( 'dev_tapapps_mobile_estate' ) );
 		$this->tapapps_mobile_inspection = ( $this->env == 'production' ? DB::connection( 'prod_tapapps_mobile_inspection' ) : DB::connection( 'dev_tapapps_mobile_inspection' ) );
@@ -63,7 +63,7 @@ class ExportController extends Controller {
 
 	public function test_kafka() {
 		$this->tapapps_mobile_inspection->statement( "
-			INSERT INTO TESTING VALUES ( 12, 'ABCDZ' )
+			INSERT INTO TESTING VALUES ( 12, 'F0108190426095604' )
 		" );
 		$this->tapapps_mobile_inspection->commit();
 		print "OK";
@@ -77,20 +77,20 @@ class ExportController extends Controller {
 	 */
 		# Jangan Dihapus!
 		# Untuk menjalankan sync tapdw.tr_inspection harian
-		public function sync_tapdw_tr_inspection_harian() {
-			$start_date = '2019-04-01'; # Tanggal Start
-			$end_date = '2019-07-31'; # Tanggal End
-			while (strtotime($start_date) <= strtotime($end_date)) {
-			    echo date( 'Ymd', strtotime( $start_date ) ).'<br />';
-			    self::sync_tapdw_tr_inspection( date( 'Ymd', strtotime( $start_date ) ) );
-			    $start_date = date ("Y-m-d", strtotime("+1 days", strtotime($start_date)));
-			}
-		}
+		// public function sync_tapdw_tr_inspection_harian() {
+		// 	$start_date = '2019-08-12'; # Tanggal Start
+		// 	$end_date = '2019-08-12'; # Tanggal End
+		// 	while (strtotime($start_date) <= strtotime($end_date)) {
+		// 	    echo date( 'Ymd', strtotime( $start_date ) ).'<br />';
+		// 	    self::sync_tapdw_tr_inspection( date( 'Ymd', strtotime( $start_date ) ) );
+		// 	    $start_date = date ("Y-m-d", strtotime("+1 days", strtotime($start_date)));
+		// 	}
+		// }
 
 		public function sync_tapdw_tr_inspection( ) {
 			$client = new \GuzzleHttp\Client();
 
-			# Generate Harian - 1
+			# Generate Harian - 1 day
 			$result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/api/v1.0/export/tap-dw/tr-inspection/'.date( 'Ymd', strtotime( '-1 day' ) ).'000000/'.date( 'Ymd', strtotime( '-1 day' ) ).'235959', [
 				'headers' => [
 					'Authorization' => 'Bearer '.$this->access_token
@@ -123,7 +123,7 @@ class ExportController extends Controller {
 			}
 
 			// print '<pre>';
-			// print_r($content_code);
+			// print_r( $result_content );
 			// print '</pre>';
 			// dd();
 			
@@ -143,9 +143,6 @@ class ExportController extends Controller {
 
 			if ( $result['status'] == true && !empty( $result['data'] ) ) {
 				foreach ( $result['data'] as $data ) {
-					#$check = collect( $this->tap_dw->select( "SELECT COUNT( * ) AS JUMLAH FROM TAP_DW.TR_INSPECTION WHERE BLOCK_INSPECT_CODE = '{$data['BLOCK_INSPECTION_CODE']}'" ) )->first();
-					
-					#if ( $check->jumlah == 0 ) {
 						$result_user = $client->request( 'GET', $this->url[$this->env]['auth'].'/api/user/'.$data['INSERT_USER'], [
 							'headers' => [
 								'Authorization' => 'Bearer '.$this->access_token
@@ -197,7 +194,7 @@ class ExportController extends Controller {
 							$insert[0]['SUB_BLOCK_CODE'] = $data['BLOCK_CODE'];
 							$insert[0]['SUB_BLOCK_NAME'] = ( count( $hs ) > 0 ? $hs->block_name : '' );
 							$insert[0]['BLOCK_INSPECT_CODE'] = $data['BLOCK_INSPECTION_CODE'];
-							$insert[0]['TANGGAL'] = date( 'd-m-Y', strtotime( $data['INSPECTION_DATE'] ) );
+							$insert[0]['TANGGAL'] = date( 'd-m-Y H:i:s', strtotime( $data['INSPECTION_DATE'] ) );
 							$insert[0]['CONTENT_INSPECT_CODE'] = '0';
 							$insert[0]['CONTENT_NAME'] = NULL;
 							$insert[0]['NILAI'] = $data['INSPECTION_RESULT'];
@@ -235,7 +232,7 @@ class ExportController extends Controller {
 									$insert[$i]['SUB_BLOCK_CODE'] = $data['BLOCK_CODE'];
 									$insert[$i]['SUB_BLOCK_NAME'] = ( count( $hs ) > 0 ? $hs->block_name : '' );
 									$insert[$i]['BLOCK_INSPECT_CODE'] = $data['BLOCK_INSPECTION_CODE'];
-									$insert[$i]['TANGGAL'] = date( 'd-m-Y', strtotime( $data['INSPECTION_DATE'] ) );
+									$insert[$i]['TANGGAL'] = date( 'd-m-Y H:i:s', strtotime( $data['INSPECTION_DATE'] ) );
 									$insert[$i]['CONTENT_INSPECT_CODE'] = $content[$detail['CONTENT_INSPECTION_CODE']]['CONTENT_CODE_REPLACE'];
 									$insert[$i]['CONTENT_NAME'] = $content[$detail['CONTENT_INSPECTION_CODE']]['CONTENT_NAME'];
 									$insert[$i]['NILAI'] = $value;
@@ -268,7 +265,7 @@ class ExportController extends Controller {
 										'\''.$data['BLOCK_CODE'].'\'',
 										'\''.( count( $hs ) > 0 ? $hs->block_name : '' ).'\'',
 										'\''.$data['BLOCK_INSPECTION_CODE'].'\'',
-										'TO_DATE(\''.date( 'd-m-Y', strtotime( $insert[0]['TANGGAL'] ) ).'\', \'DD-MM-RRRR\')',
+										'TO_DATE(\''.date( 'd-m-Y H:i:s', strtotime( $insert[0]['TANGGAL'] ) ).'\', \'DD-MM-RRRR HH24:MI:SS\')',
 										'\''.$img['IMAGE_CODE'].'\'',
 										'\''.$data['LONG_START_INSPECTION'].'\'',
 										'\''.$data['LAT_START_INSPECTION'].'\'',
@@ -306,7 +303,7 @@ class ExportController extends Controller {
 									'\''.$data['BLOCK_CODE'].'\'',
 									'\''.( count( $hs ) > 0 ? $hs->block_name : '' ).'\'',
 									'\''.$data['BLOCK_INSPECTION_CODE'].'\'',
-									'TO_DATE(\''.date( 'd-m-Y', strtotime( $ins['TANGGAL'] ) ).'\', \'DD-MM-RRRR\')',
+									'TO_DATE(\''.date( 'd-m-Y H:i:s', strtotime( $ins['TANGGAL'] ) ).'\', \'DD-MM-RRRR HH24:MI:SS\')',
 									'\''.$ins['CONTENT_INSPECT_CODE'].'\'',
 									( $ins['CONTENT_NAME'] == '' ? 'NULL' : '\''.$ins['CONTENT_NAME'].'\'' ),
 									'\''.$ins['NILAI'].'\'',
@@ -350,7 +347,7 @@ class ExportController extends Controller {
 										'\''.$data['BLOCK_CODE'].'\'',
 										'\''.( count( $hs ) > 0 ? $hs->block_name : '' ).'\'',
 										'\''.$data['BLOCK_INSPECTION_CODE'].'\'',
-										'TO_DATE(\''.date( 'd-m-Y', strtotime( $ins['TANGGAL'] ) ).'\', \'DD-MM-RRRR\')',
+										'TO_DATE(\''.date( 'd-m-Y H:i:s', strtotime( $track['DATE_TRACK'] ) ).'\', \'DD-MM-RRRR HH24:MI:SS\')',
 										'\''.$data['AREAL'].'\'',
 										'\'0\'',
 										'\''.$track['LAT_TRACK'].'\'',
@@ -368,26 +365,25 @@ class ExportController extends Controller {
 								}
 							}
 						}
-					#}
 				}
 			}
 			$response['end_time'] = date( 'YmdHis' );
 
-			// if ( Storage::disk('export_mobile_inspection')->put( 'TR_INSPECTION.csv', join( PHP_EOL, $csv_data['TR_INSPECTION'] ) ) ) {
-			// 	$response['status']['TR_INSPECTION'] = 'OK';
-			// }
-			// if ( Storage::disk('export_mobile_inspection')->put( 'TR_INSPECTION_IMG.csv', join( PHP_EOL, $csv_data['TR_INSPECTION_IMG'] ) ) ) {
-			// 	$response['status']['TR_INSPECTION_IMG'] = 'OK';
-			// }
-			// if ( Storage::disk('export_mobile_inspection')->put( 'TR_INSPECTION_PATH.csv', join( PHP_EOL, $csv_data['TR_INSPECTION_PATH'] ) ) ) {
-			// 	$response['status']['TR_INSPECTION_PATH'] = 'OK';
-			// }
+			if ( Storage::disk('export_mobile_inspection')->put( 'TR_INSPECTION.csv', join( PHP_EOL, $csv_data['TR_INSPECTION'] ) ) ) {
+				$response['status']['TR_INSPECTION'] = 'OK';
+			}
+			if ( Storage::disk('export_mobile_inspection')->put( 'TR_INSPECTION_IMG.csv', join( PHP_EOL, $csv_data['TR_INSPECTION_IMG'] ) ) ) {
+				$response['status']['TR_INSPECTION_IMG'] = 'OK';
+			}
+			if ( Storage::disk('export_mobile_inspection')->put( 'TR_INSPECTION_PATH.csv', join( PHP_EOL, $csv_data['TR_INSPECTION_PATH'] ) ) ) {
+				$response['status']['TR_INSPECTION_PATH'] = 'OK';
+			}
 			
-			File::append( public_path( '/export/tap_dw/TR_INSPECTION.csv' ), join( PHP_EOL, $csv_data['TR_INSPECTION'] ).PHP_EOL );
-			File::append( public_path( '/export/tap_dw/TR_INSPECTION_IMG.csv' ), join( PHP_EOL, $csv_data['TR_INSPECTION_IMG'] ).PHP_EOL );
-			File::append( public_path( '/export/tap_dw/TR_INSPECTION_PATH.csv' ), join( PHP_EOL, $csv_data['TR_INSPECTION_PATH'] ).PHP_EOL );
+			// File::append( public_path( '/export/tap_dw/TR_INSPECTION.csv' ), join( PHP_EOL, $csv_data['TR_INSPECTION'] ).PHP_EOL );
+			// File::append( public_path( '/export/tap_dw/TR_INSPECTION_IMG.csv' ), join( PHP_EOL, $csv_data['TR_INSPECTION_IMG'] ).PHP_EOL );
+			// File::append( public_path( '/export/tap_dw/TR_INSPECTION_PATH.csv' ), join( PHP_EOL, $csv_data['TR_INSPECTION_PATH'] ).PHP_EOL );
 			
-			// return response()->json( $response );
+			return response()->json( $response );
 		}
 
 	/**
@@ -398,7 +394,7 @@ class ExportController extends Controller {
 	 */
 		public function sync_mobile_estate_tr_ebcc() {
 			$client = new \GuzzleHttp\Client();
-			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.0/export/tr-ebcc/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959', [
+			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.1/export/tr-ebcc/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959', [
 				'headers' => [
 					'Authorization' => 'Bearer '.$this->access_token
 				]
@@ -498,7 +494,7 @@ class ExportController extends Controller {
 	 */
 		public function sync_mobile_estate_tr_ebcc_kualitas() {
 			$client = new \GuzzleHttp\Client();
-			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.0/export/tr-ebcc-kualitas/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959', [
+			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.1/export/tr-ebcc-kualitas/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959', [
 				'headers' => [
 					'Authorization' => 'Bearer '.$this->access_token
 				]
@@ -605,7 +601,7 @@ class ExportController extends Controller {
 	 */
 		public function sync_mobile_estate_tr_image() {
 			$client = new \GuzzleHttp\Client();
-			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.0/export/tr-ebcc/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959', [
+			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.1/export/tr-ebcc/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959', [
 				'headers' => [
 					'Authorization' => 'Bearer '.$this->access_token
 				]
@@ -707,11 +703,18 @@ class ExportController extends Controller {
 	 */
 		public function sync_tr_premi_inspection() {
 			$client = new \GuzzleHttp\Client();
-			$result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/export/premi/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959', [
+			// $result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/export/premi/'.date( 'Ymd' ).'000000/'.date( 'Ymd' ).'235959', [
+			// 	'headers' => [
+			// 		'Authorization' => 'Bearer '.$this->access_token
+			// 	]
+			// ]);
+
+			$result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/export/premi/20190813000000/20190813235959', [
 				'headers' => [
 					'Authorization' => 'Bearer '.$this->access_token
 				]
 			]);
+
 			$response = array();
 			$response['message'] = 'TR_PREMI_INSPECTION';
 			$response['start_time'] = date( 'YmdHis' );
@@ -727,10 +730,10 @@ class ExportController extends Controller {
 			if ( $result['status'] == true ) {
 
 				// Menghapus dulu transaksi bulan sekarang
-				$spmon_bulan_ini = date( 'Ym' );
-				$this->tapapps_mobile_inspection->statement( "
-					DELETE FROM TR_PREMI_INSPECTION WHERE SPMON = '{$spmon_bulan_ini}'
-				" );
+				// $spmon_bulan_ini = date( 'Ym' );
+				// $this->tapapps_mobile_inspection->statement( "
+				// 	DELETE FROM TR_PREMI_INSPECTION WHERE SPMON = '{$spmon_bulan_ini}'
+				// " );
 
 				foreach ( $result['data'] as $inspeksi ) {
 
@@ -742,6 +745,7 @@ class ExportController extends Controller {
 					$ins_CC0002_pokok_panen = 0; // CONTENT_CODE : CC0002 ( POKOK PANEN )
 					$ins_CC0004_piringan = 0; // CONTENT_CODE: CC0004 (Brondolan di Piringan )
 					$ins_CC0005_tph = 0; // CONTENT_CODE: CC0005 (Brondolan di TPH )
+					$ins_date = date( 'Y-m-d H:i:s', strtotime( $inspeksi['INSPECTION_DATE'] ) );
 
 					$check = $this->tapapps_mobile_inspection->select( "SELECT COUNT( * ) AS COUNT FROM MOBILE_INSPECTION.TR_PREMI_INSPECTION WHERE BLOCK_INSPECTION_CODE = '{$ins_code}'" );
 					
@@ -1455,7 +1459,6 @@ class ExportController extends Controller {
 					AND HRIS.EMPLOYEE_USERNAME IS NOT NULL
 					AND HRIS.EMPLOYEE_RESIGNDATE IS NULL
 					AND HRIS.DELETE_TIME_DW IS NULL
-					-- AND ROWNUM <= 10
 			");
 			$response = array();
 			$response['message'] = 'TM_EMPLOYEE_HRIS';

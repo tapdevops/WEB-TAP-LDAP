@@ -42,8 +42,6 @@ Route::get( '/sync/tapdw/tr-inspection-xxx', 'ExportController@sync_tapdw_tr_ins
 
 Route::get( '/kafka', 'ExportController@test_kafka' );
 
-
-
 # SOAP
 Route::get( '/data-sap/material_group', 'GetDataSAPController@material_group' );
 Route::get( '/data-sap/uom', 'GetDataSAPController@uom' );
