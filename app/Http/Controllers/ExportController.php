@@ -709,11 +709,11 @@ class ExportController extends Controller {
 				]
 			]);
 
-			$result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/export/premi/20190813000000/20190813235959', [
-				'headers' => [
-					'Authorization' => 'Bearer '.$this->access_token
-				]
-			]);
+			// $result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/export/premi/20190813000000/20190813235959', [
+			// 	'headers' => [
+			// 		'Authorization' => 'Bearer '.$this->access_token
+			// 	]
+			// ]);
 
 			$response = array();
 			$response['message'] = 'TR_PREMI_INSPECTION';
