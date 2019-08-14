@@ -703,11 +703,11 @@ class ExportController extends Controller {
 	 */
 		public function sync_tr_premi_inspection() {
 			$client = new \GuzzleHttp\Client();
-			// $result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/export/premi/'.date( 'Ymd' ).'000000/'.date( 'Ymd' ).'235959', [
-			// 	'headers' => [
-			// 		'Authorization' => 'Bearer '.$this->access_token
-			// 	]
-			// ]);
+			$result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/export/premi/'.date( 'Ymd' ).'000000/'.date( 'Ymd' ).'235959', [
+				'headers' => [
+					'Authorization' => 'Bearer '.$this->access_token
+				]
+			]);
 
 			$result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/export/premi/20190813000000/20190813235959', [
 				'headers' => [
