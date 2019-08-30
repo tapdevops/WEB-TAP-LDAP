@@ -42,6 +42,9 @@ Route::get( '/sync/tapdw/tr-inspection-xxx', 'ExportController@sync_tapdw_tr_ins
 
 Route::get( '/kafka', 'ExportController@test_kafka' );
 
+# DW
+Route::get( '/dw/time-daily/get-active-date-min-7/{werks}', 'Dw\TimeDailyController@get_active_date_min_7_days' );
+
 # SOAP
 Route::get( '/data-sap/material_group', 'GetDataSAPController@material_group' );
 Route::get( '/data-sap/uom', 'GetDataSAPController@uom' );

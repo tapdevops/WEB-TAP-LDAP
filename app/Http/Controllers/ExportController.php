@@ -20,7 +20,7 @@ class ExportController extends Controller {
 	protected $access_token;
 	
 	public function __construct() {
-		$this->env = 'development';
+		$this->env = 'production';
 		$this->tap_dw = ( $this->env == 'production' ? DB::connection( 'prod_tap_dw' ) : DB::connection( 'dev_tap_dw' ) );
 		$this->tapapps_mobile_estate = ( $this->env == 'production' ? DB::connection( 'prod_tapapps_mobile_estate' ) : DB::connection( 'dev_tapapps_mobile_estate' ) );
 		$this->tapapps_mobile_inspection = ( $this->env == 'production' ? DB::connection( 'prod_tapapps_mobile_inspection' ) : DB::connection( 'dev_tapapps_mobile_inspection' ) );
@@ -394,7 +394,7 @@ class ExportController extends Controller {
 	 */
 		public function sync_mobile_estate_tr_ebcc() {
 			$client = new \GuzzleHttp\Client();
-			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.1/export/tr-ebcc/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959', [
+			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.1/export/tr-ebcc/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959/estate', [
 				'headers' => [
 					'Authorization' => 'Bearer '.$this->access_token
 				]
@@ -494,7 +494,7 @@ class ExportController extends Controller {
 	 */
 		public function sync_mobile_estate_tr_ebcc_kualitas() {
 			$client = new \GuzzleHttp\Client();
-			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.1/export/tr-ebcc-kualitas/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959', [
+			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.1/export/tr-ebcc-kualitas/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959/estate', [
 				'headers' => [
 					'Authorization' => 'Bearer '.$this->access_token
 				]
@@ -601,7 +601,7 @@ class ExportController extends Controller {
 	 */
 		public function sync_mobile_estate_tr_image() {
 			$client = new \GuzzleHttp\Client();
-			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.1/export/tr-ebcc/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959', [
+			$result = $client->request( 'GET', $this->url[$this->env]['ebcc_validation'].'/api/v1.1/export/tr-ebcc/'.date( 'Ym1' ).'000000/'.date( 'Ymt' ).'235959/estate', [
 				'headers' => [
 					'Authorization' => 'Bearer '.$this->access_token
 				]
