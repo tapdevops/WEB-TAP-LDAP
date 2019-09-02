@@ -75,7 +75,7 @@ class TargetController extends Controller {
 			if ( !empty( $query ) ) {
 				$response['http_status_code'] = 200;
 				$response['message'] = "OK";
-				$response['data']['results']['jumlah_hari'] = intval( $query->jumlah );
+				$response['data']['results']['jumlah_krani_buah'] = intval( $query->jumlah );
 			}
 		}
 
