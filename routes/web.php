@@ -46,6 +46,7 @@ Route::get( '/kafka', 'ExportController@test_kafka' );
 Route::get( '/dw/time-daily/get-active-date-min-7/{werks}', 'Dw\TargetController@time_daily_get_active_date_min_7_days' );
 Route::get( '/dw/employee-sap/get-krani-buah/{werks_afd_code}', 'Dw\TargetController@employee_sap_get_krani_buah' );
 
+
 # SOAP
 Route::get( '/data-sap/material_group', 'GetDataSAPController@material_group' );
 Route::get( '/data-sap/uom', 'GetDataSAPController@uom' );
