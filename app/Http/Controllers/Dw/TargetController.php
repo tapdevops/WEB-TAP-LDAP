@@ -11,7 +11,7 @@ use URL;
 use Validator;
 use App\LDAP;
 
-class TimeDailyController extends Controller {
+class TargetController extends Controller {
 
 	public function __construct() {
 		# Set TAP_DW Connection
@@ -19,7 +19,7 @@ class TimeDailyController extends Controller {
 		$this->tap_dw = ( $this->env == 'prod' ? DB::connection( 'prod_tap_dw' ) : DB::connection( 'dev_tap_dw' ) );
 	}
 
-	public function get_active_date_min_7_days( Request $req ) {
+	public function time_daily_get_active_date_min_7_days( Request $req ) {
 		$response = array(
 			"http_status_code" => 404,
 			"message" => "Not found",
@@ -44,6 +44,38 @@ class TimeDailyController extends Controller {
 				$response['http_status_code'] = 200;
 				$response['message'] = "OK";
 				$response['data']['results']['jumlah_hari'] = $query->jumlah_hari;
+			}
+		}
+
+		return response()->json( $response );
+	}
+
+	public function employee_sap_get_krani_buah( Request $req ) {
+		$response = array(
+			"http_status_code" => 404,
+			"message" => "Not found",
+			"data" => array(
+				"results" => array(),
+				"error_message" => array()
+			)
+		);
+		if ( $req->werks_afd_code ) {
+			$in_array = '\''.str_replace( ',', '\',\'', $req->werks_afd_code ).'\'';
+			$query = collect( $this->tap_dw->select( "
+				SELECT
+					COUNT( 1 ) AS JUMLAH
+				FROM
+					TAP_DW.TM_EMPLOYEE_SAP
+				WHERE
+					SYSDATE BETWEEN START_VALID AND END_VALID
+					AND JOB_CODE = 'KRANI BUAH'
+					AND WERKS || AFD_CODE IN ( {$in_array} )
+			" ) )->first();
+
+			if ( !empty( $query ) ) {
+				$response['http_status_code'] = 200;
+				$response['message'] = "OK";
+				$response['data']['results']['jumlah_hari'] = intval( $query->jumlah );
 			}
 		}
 
