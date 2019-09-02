@@ -20,7 +20,7 @@ class ExportController extends Controller {
 	protected $access_token;
 	
 	public function __construct() {
-		$this->env = 'production';
+		$this->env = 'development';
 		$this->tap_dw = ( $this->env == 'production' ? DB::connection( 'prod_tap_dw' ) : DB::connection( 'dev_tap_dw' ) );
 		$this->tapapps_mobile_estate = ( $this->env == 'production' ? DB::connection( 'prod_tapapps_mobile_estate' ) : DB::connection( 'dev_tapapps_mobile_estate' ) );
 		$this->tapapps_mobile_inspection = ( $this->env == 'production' ? DB::connection( 'prod_tapapps_mobile_inspection' ) : DB::connection( 'dev_tapapps_mobile_inspection' ) );
