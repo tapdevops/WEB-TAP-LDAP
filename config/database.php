@@ -57,7 +57,7 @@ return [
 			'password' => 'estate123#',
 			'charset'  => 'AL32UTF8',
 			'prefix'   => '',
-		], 
+		],
 		'prod_tapapps_mobile_inspection' => [
 			'driver'   => 'oracle',
 			'tns'      =>  '',
@@ -150,7 +150,7 @@ return [
 			'charset'  => 'AL32UTF8',
 			'prefix'   => '',
 		],
-		
+
 		# TIDAK DIPAKAI / DIABAIKAN
 		'sqlite' => [
 			'driver' => 'sqlite',
@@ -209,14 +209,14 @@ return [
 
 	'redis' => [
 
-	 	'client' => 'predis',
+		'client' => 'predis',
 
-	 	'default' => [
-	 		'host' => env('REDIS_HOST', '127.0.0.1'),
-	 		'password' => env('REDIS_PASSWORD', null),
-	 		'port' => env('REDIS_PORT', 6379),
-	 		'database' => 0,
-	 	],
+		'default' => [
+			'host' => env('REDIS_HOST', '127.0.0.1'),
+			'password' => env('REDIS_PASSWORD', null),
+			'port' => env('REDIS_PORT', 6379),
+			'database' => 0,
+		],
 
 	],
 

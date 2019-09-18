@@ -35,7 +35,7 @@ class TargetController extends Controller {
 				FROM
 					TAP_DW.TM_TIME_DAILY TD
 				WHERE
-					TD.TANGGAL BETWEEN SYSDATE-7 AND SYSDATE-1
+					TD.TANGGAL BETWEEN SYSDATE-8 AND SYSDATE-1
 					AND TD.WERKS = '{$req->werks}'
 					AND TD.FLAG_HK = 'Y'
 			" ) )->first();
