@@ -452,7 +452,7 @@ class ExportController extends Controller
 	public function sync_mobile_estate_tr_ebcc()
 	{
 		$client = new \GuzzleHttp\Client();
-		$result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/' . date('Ym1') . '000000/' . date('Ymt') . '235959', [
+		$result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/' . date('Ym1') . '000000/' . date('Ymt') . '235959/estate', [
 			'headers' => [
 				'Authorization' => 'Bearer ' . $this->access_token
 			]
@@ -563,7 +563,7 @@ class ExportController extends Controller
 		// // 	$end_date = date('Ymd', strtotime($req->end_date));
 		// // }
 
-		$result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc-kualitas/20190815000000/20190815235959/estate', [
+		$result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc-kualitas/' . date('Ymd', strtotime('-5 day')) . '000000/' . date('Ymd', strtotime('-1 day')) . '235959/estate', [
 			'headers' => [
 				'Authorization' => 'Bearer ' . $this->access_token
 			]
@@ -679,7 +679,7 @@ class ExportController extends Controller
 	public function sync_mobile_estate_tr_image()
 	{
 		$client = new \GuzzleHttp\Client();
-		$result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/' . date('Ym1') . '000000/' . date('Ymt') . '235959', [
+		$result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/' . date('Ym1') . '000000/' . date('Ymt') . '235959/estate', [
 			'headers' => [
 				'Authorization' => 'Bearer ' . $this->access_token
 			]
@@ -692,7 +692,7 @@ class ExportController extends Controller
 		$response['num_rows'] = 0;
 
 		// print '<pre>';
-		// print_r($result);
+		// print_r($this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/' . date('Ym1') . '000000/' . date('Ymt') . '235959');
 		// print '</pre>';
 		// dd();
 
