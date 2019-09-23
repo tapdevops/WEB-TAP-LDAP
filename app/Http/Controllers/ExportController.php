@@ -563,16 +563,27 @@ class ExportController extends Controller
 		// // 	$end_date = date('Ymd', strtotime($req->end_date));
 		// // }
 
+		// $result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc-kualitas/20190918000000/20190922235959/estate', [
+		// 	'headers' => [
+		// 		'Authorization' => 'Bearer ' . $this->access_token
+		// 	]
+		// ]);
+
 		$result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc-kualitas/' . date('Ymd', strtotime('-5 day')) . '000000/' . date('Ymd', strtotime('-1 day')) . '235959/estate', [
 			'headers' => [
 				'Authorization' => 'Bearer ' . $this->access_token
 			]
 		]);
 
+
+
 		// print '<pre>';
-		// print_r($this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc-kualitas/20190801000000/20190831235959/estate');
-		// print '<pre>';
+		// print_r($this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc-kualitas/' . date('Ymd', strtotime('-5 day')) . '000000/' . date('Ymd', strtotime('-1 day')) . '235959/estate');
 		// dd();
+		// print '<pre>';
+		// dd($result);
+
+
 		$response = array();
 		$response['message'] = 'MOBILE_ESTATE.TR_EBCC_KUALITAS';
 		$response['start_time'] = date('YmdHis');
@@ -580,6 +591,11 @@ class ExportController extends Controller
 		$response['num_rows'] = 0;
 		$result = json_decode($result->getBody(), true);
 
+
+		// print '<pre>';
+		// print_r($result);
+		// print '<pre>';
+		// dd();
 
 
 		$data_from = ($this->env == 'qa' ? 'MI_TEST_QA' : ($this->env == 'production' ? 'MOBILE_INS' : 'MI_TEST_QA'));
@@ -601,6 +617,7 @@ class ExportController extends Controller
 				// print "SELECT EBCC_KUALITAS_CODE FROM MOBILE_ESTATE.TR_EBCC_KUALITAS WHERE EBCC_KUALITAS_CODE = '{$ebcc_kualitas_code}'";
 				// print '<pre>';
 				// print_r($check);
+				// dd();
 				// print '<pre><hr />';
 
 				$result_user = json_decode($result_user->getBody(), true);
@@ -613,6 +630,7 @@ class ExportController extends Controller
 				// print '<pre>';
 				// print_r($check);
 				// print '<pre>';
+				// dd();
 
 				// if ( isset( $data['WERKS'] ) && isset( $data['AFD_CODE'] ) && isset( $data['TPH_CODE'] ) ):
 				if ($check[0]->jumlah == 0) {
