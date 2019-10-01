@@ -29,7 +29,7 @@ class ExportController extends Controller
 
 	public function __construct()
 	{
-		$this->env = 'qa';
+		$this->env = 'development';
 		$this->tap_dw = ($this->env == 'production' ? DB::connection('prod_tap_dw') : DB::connection('dev_tap_dw'));
 		$this->tapapps_mobile_estate = ($this->env == 'production' ? DB::connection('prod_tapapps_mobile_estate') : DB::connection('dev_tapapps_mobile_estate'));
 		$this->tapapps_mobile_inspection = ($this->env == 'production' ? DB::connection('prod_tapapps_mobile_inspection') : DB::connection('dev_tapapps_mobile_inspection'));
@@ -118,6 +118,20 @@ class ExportController extends Controller
 			]
 		]);
 
+
+		// $result = $client->request('GET', $this->url[$this->env]['inspection'] . '/api/v1.0/export/tap-dw/tr-inspection/20190922000000/20190922235959', [
+		// 	'headers' => [
+		// 		'Authorization' => 'Bearer ' . $this->access_token
+		// 	]
+		// ]);
+
+		// $z = json_decode($result->getBody(), true);
+
+		// print '<pre>';
+		// print_r(count($z['data']));
+		// print '</pre>';
+		// dd();
+
 		# Generate dari fungsi sync_tapdw_tr_inspection_harian
 		// $result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/api/v1.0/export/tap-dw/tr-inspection/'.$date.'000000/'.$date.'235959', [
 		// 	'headers' => [
@@ -144,7 +158,7 @@ class ExportController extends Controller
 		}
 
 		// print '<pre>';
-		// print_r($result);
+		// print_r($result_content);
 		// print '</pre>';
 		// dd();
 
@@ -165,6 +179,10 @@ class ExportController extends Controller
 		$csv_data['TR_INSPECTION_IMG'] = array();
 		$csv_data['TR_INSPECTION_PATH'] = array();
 
+		// print '<pre>';
+		// print($response);
+		// print '</pre>';
+
 		if ($result['status'] == true && !empty($result['data'])) {
 			foreach ($result['data'] as $data) {
 				$result_user = $client->request('GET', $this->url[$this->env]['auth'] . '/api/user/' . $data['INSERT_USER'], [
@@ -174,9 +192,12 @@ class ExportController extends Controller
 				]);
 				$result_user = json_decode($result_user->getBody(), true);
 
+
 				if (!empty($result_user['data'])) {
 					$result_user = $result_user['data'];
 				}
+
+
 
 				$sql_hectare_statement = "SELECT 
 								BLOCK.AFD_NAME, 
@@ -328,10 +349,10 @@ class ExportController extends Controller
 
 
 
-					$my_file = File::append(public_path('/export/tap_dw/LOG-PUSH-REPORT-INSPECTION.txt'), '[' . date('Y-m-d H:i') . '] Rows TR_INSPECTION = 100' . PHP_EOL);
-					$handle = fopen($my_file, 'w') or die('Cannot open file:  ' . $my_file);
-					$data = '[' . date('Y-m-d H:i') . '] Rows TR_INSPECTION = {{$count_tr_inspection_img}}' . PHP_EOL;
-					fwrite($handle, $data);
+					// $my_file = File::append(public_path('/export/tap_dw/LOG-PUSH-REPORT-INSPECTION.txt'), '[' . date('Y-m-d H:i') . '] Rows TR_INSPECTION = 100' . PHP_EOL);
+					// $handle = fopen($my_file, 'w') or die('Cannot open file:  ' . $my_file);
+					// $data = '[' . date('Y-m-d H:i') . '] Rows TR_INSPECTION = {{$count_tr_inspection_img}}' . PHP_EOL;
+					// fwrite($handle, $data);
 
 
 
@@ -426,16 +447,17 @@ class ExportController extends Controller
 		}
 		$response['end_time'] = date('YmdHis');
 
-		// if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION.csv', join(PHP_EOL, $csv_data['TR_INSPECTION']))) {
-		// 	$response['status']['TR_INSPECTION'] = 'OK';
-		// }
-		// if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION_IMG.csv', join(PHP_EOL, $csv_data['TR_INSPECTION_IMG']))) {
-		// 	$response['status']['TR_INSPECTION_IMG'] = 'OK';
-		// }
-		// if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION_PATH.csv', join(PHP_EOL, $csv_data['TR_INSPECTION_PATH']))) {
-		// 	$response['status']['TR_INSPECTION_PATH'] = 'OK';
-		// }
+		if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION.csv', join(PHP_EOL, $csv_data['TR_INSPECTION']))) {
+			$response['status']['TR_INSPECTION'] = 'OK';
+		}
+		if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION_IMG.csv', join(PHP_EOL, $csv_data['TR_INSPECTION_IMG']))) {
+			$response['status']['TR_INSPECTION_IMG'] = 'OK';
+		}
+		if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION_PATH.csv', join(PHP_EOL, $csv_data['TR_INSPECTION_PATH']))) {
+			$response['status']['TR_INSPECTION_PATH'] = 'OK';
+		}
 
+		// print_r($csv_data);
 		// File::append(public_path('/export/tap_dw/TR_INSPECTION.csv'), join(PHP_EOL, $csv_data['TR_INSPECTION']) . PHP_EOL);
 		// File::append(public_path('/export/tap_dw/TR_INSPECTION_IMG.csv'), join(PHP_EOL, $csv_data['TR_INSPECTION_IMG']) . PHP_EOL);
 		// File::append(public_path('/export/tap_dw/TR_INSPECTION_PATH.csv'), join(PHP_EOL, $csv_data['TR_INSPECTION_PATH']) . PHP_EOL);
@@ -452,7 +474,7 @@ class ExportController extends Controller
 	public function sync_mobile_estate_tr_ebcc()
 	{
 		$client = new \GuzzleHttp\Client();
-		$result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/' . date('Ym1') . '000000/' . date('Ymt') . '235959/estate', [
+		$result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/' . date('Ym1') . '000000/' . date('Ymt') . '235959/:type', [
 			'headers' => [
 				'Authorization' => 'Bearer ' . $this->access_token
 			]
@@ -710,9 +732,11 @@ class ExportController extends Controller
 		$response['num_rows'] = 0;
 
 		// print '<pre>';
-		// print_r($this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/' . date('Ym1') . '000000/' . date('Ymt') . '235959');
+		// print_r($this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/' . date('Ym1') . '000000/' . date('Ymt') . '235959/estate');
 		// print '</pre>';
 		// dd();
+
+
 
 		if ($result['status'] == true && !empty($result['data'])) {
 			foreach ($result['data'] as $data) {
@@ -806,9 +830,9 @@ class ExportController extends Controller
 			]
 		]);
 
-		// $result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/export/premi/20190813000000/20190813235959', [
+		// $result = $client->request('GET', $this->url[$this->env]['inspection'] . '/export/premi/20190926000000/20190926235959', [
 		// 	'headers' => [
-		// 		'Authorization' => 'Bearer '.$this->access_token
+		// 		'Authorization' => 'Bearer ' . $this->access_token
 		// 	]
 		// ]);
 
@@ -819,10 +843,10 @@ class ExportController extends Controller
 		$response['num_rows'] = 0;
 		$result = json_decode($result->getBody(), true);
 
-		#print '<pre>';
-		#print_r( $result );
-		#print '</pre>';
-		#dd();
+		// print '<pre>';
+		// print_r(count($result));
+		// print '</pre>';
+		// dd();
 
 		if ($result['status'] == true) {
 
@@ -975,8 +999,15 @@ class ExportController extends Controller
 		$response['end_time'] = 0;
 		$response['num_rows'] = 0;
 
+		// print '<pre>';
+		// print($this->url[$this->env]['hectare_statement'] . '/sync-tap/region');
+		// print '</pre>';
+		// dd();
+
 		if (count($query) > 0) {
 			foreach ($query as $data) {
+
+
 				$result = $client->request('POST', $this->url[$this->env]['hectare_statement'] . '/sync-tap/region', [
 					'json' => [
 						'NATIONAL' => $data->national,
@@ -992,6 +1023,8 @@ class ExportController extends Controller
 			}
 			$response['end_time'] = date('YmdHis');
 		}
+
+
 
 		return response()->json($response);
 	}
@@ -1377,14 +1410,29 @@ class ExportController extends Controller
 					AND REGION_CODE NOT IN ( '03' )
 					AND ROWNUM <= 25
 			");
+
 		$response = array();
 		$response['message'] = 'TR_HS_LAND_USE';
 		$response['start_time'] = date('YmdHis');
 		$response['end_time'] = 0;
 		$response['num_rows'] = 0;
 
+		// print '<pre>';
+		// print_r($query);
+		// print '</pre>';
+		// dd();
+
+
 		if (count($query) > 0) {
 			foreach ($query as $data) {
+
+				// print '<pre>';
+				// print_r($data);
+				// print '</pre>';
+				// dd();
+
+
+
 				$result = $client->request('POST', $this->url[$this->env]['hectare_statement'] . '/sync-tap/land-use', [
 					'json' => [
 						"NATIONAL" 				=> $data->national,
@@ -1422,6 +1470,13 @@ class ExportController extends Controller
 						'Authorization' => 'Bearer ' . $this->access_token
 					]
 				]);
+
+
+				// print '<pre>';
+				// print_r($result);
+				// print '</pre>';
+				// dd();
+
 
 				$response['num_rows']++;
 			}
