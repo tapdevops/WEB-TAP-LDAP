@@ -29,7 +29,7 @@ class ExportController extends Controller
 
 	public function __construct()
 	{
-		$this->env = 'dev';
+		$this->env = 'development';
 		$this->tap_dw = ($this->env == 'production' ? DB::connection('prod_tap_dw') : DB::connection('dev_tap_dw'));
 		$this->tapapps_mobile_estate = ($this->env == 'production' ? DB::connection('prod_tapapps_mobile_estate') : DB::connection('dev_tapapps_mobile_estate'));
 		$this->tapapps_mobile_inspection = ($this->env == 'production' ? DB::connection('prod_tapapps_mobile_inspection') : DB::connection('dev_tapapps_mobile_inspection'));
@@ -105,12 +105,10 @@ class ExportController extends Controller
 
 		// $start_date = date('Ymd', strtotime('-5 day'));
 		// $end_date = date('Ymd', strtotime('-1 day'));
-
 		// if ($req->start_date && $req->end_date) {
 		// 	$start_date = date('Ymd', strtotime($req->start_date));
 		// 	$end_date = date('Ymd', strtotime($req->end_date));
 		// }
-
 		# Generate Harian - 1 day
 		$result = $client->request('GET', $this->url[$this->env]['inspection'] . '/api/v1.0/export/tap-dw/tr-inspection/' . date('Ymd') . '000000/' . date('Ymd') . '235959', [
 			'headers' => [
@@ -118,13 +116,26 @@ class ExportController extends Controller
 			]
 		]);
 
+		// $result = $client->request('GET', $this->url[$this->env]['inspection'] . '/api/v1.0/export/tap-dw/tr-inspection/20190921000000/20190921235959', [
+		// 	'headers' => [
+		// 		'Authorization' => 'Bearer ' . $this->access_token
+		// 	]
+		// ]);
+
+		// $z = json_decode($result->getBody(), true);
+		// print '<pre>';
+		// print_r(count($z['data']));
+		// print '</pre>';
+		// dd();
+
+
+
 		# Generate dari fungsi sync_tapdw_tr_inspection_harian
 		// $result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/api/v1.0/export/tap-dw/tr-inspection/'.$date.'000000/'.$date.'235959', [
 		// 	'headers' => [
 		// 		'Authorization' => 'Bearer '.$this->access_token
 		// 	]
 		// ] );
-
 		$result = json_decode($result->getBody(), true);
 		$result_content = $client->request('GET', $this->url[$this->env]['auth'] . '/api/v1.0/content?GROUP_CATEGORY=INSPEKSI&CATEGORY=PERAWATAN&TM=YES', [
 			'headers' => [
@@ -142,12 +153,10 @@ class ExportController extends Controller
 				"CONTENT_NAME" => strtoupper($ct['CONTENT_NAME'])
 			);
 		}
-
 		// print '<pre>';
-		// print_r($result);
+		// print_r($result_content);
 		// print '</pre>';
 		// dd();
-
 		$response = array();
 		$response['message'] = 'TAP_DW.TR_INSPECTION';
 		$response['start_time'] = date('YmdHis');
@@ -160,11 +169,12 @@ class ExportController extends Controller
 		$count_tr_inspection = 0;
 		$count_tr_inspection_img = 0;
 		$count_tr_inspection_phat = 0;
-
 		$csv_data['TR_INSPECTION'] = array();
 		$csv_data['TR_INSPECTION_IMG'] = array();
 		$csv_data['TR_INSPECTION_PATH'] = array();
-
+		// print '<pre>';
+		// print($response);
+		// print '</pre>';
 		if ($result['status'] == true && !empty($result['data'])) {
 			foreach ($result['data'] as $data) {
 				$result_user = $client->request('GET', $this->url[$this->env]['auth'] . '/api/user/' . $data['INSERT_USER'], [
@@ -173,11 +183,9 @@ class ExportController extends Controller
 					]
 				]);
 				$result_user = json_decode($result_user->getBody(), true);
-
 				if (!empty($result_user['data'])) {
 					$result_user = $result_user['data'];
 				}
-
 				$sql_hectare_statement = "SELECT 
 								BLOCK.AFD_NAME, 
 								BLOCK.BLOCK_NAME 
@@ -191,18 +199,14 @@ class ExportController extends Controller
 								TO_CHAR( SYSDATE, 'DD-MM-RRRR' ) <= TO_CHAR( BLOCK.END_VALID, 'DD-MM-RRRR' ) AND 
 								ROWNUM = 1";
 				$hs = collect($this->tap_dw->select($sql_hectare_statement))->first();
-
-
 				$result_img = $client->request('GET', $this->url[$this->env]['images'] . '/images/' . $data['BLOCK_INSPECTION_CODE'], [
 					'headers' => [
 						'Authorization' => 'Bearer ' . $this->access_token
 					]
 				]);
 				$result_img = json_decode($result_img->getBody(), true);
-
 				# Jika detail ada, maka akan di set data untuk insert
 				if (!empty($data['DETAIL'])) {
-
 					$insert[0]['NATIONAL'] = 'NATIONAL';
 					$insert[0]['REGION_CODE'] = '0' . substr($data['WERKS'], 0, 1);
 					$insert[0]['COMP_CODE'] = substr($data['WERKS'], 0, 2);
@@ -228,11 +232,9 @@ class ExportController extends Controller
 					$insert[0]['INSPECTION_TYPE'] = 'INSPECTION_RESULT';
 					$insert[0]['INSERT_TIME_DW'] = '-';
 					$insert[0]['UPDATE_TIME_DW'] = NULL;
-
 					$i = 1;
 					foreach ($data['DETAIL'] as $detail) {
 						if (in_array($detail['CONTENT_INSPECTION_CODE'], $content_code)) {
-
 							$value = '-';
 							switch ($detail['VALUE']) {
 								case 'REHAB':
@@ -248,7 +250,6 @@ class ExportController extends Controller
 									$value = 'A';
 									break;
 							}
-
 							$insert[$i]['NATIONAL'] = 'NATIONAL';
 							$insert[$i]['REGION_CODE'] = '0' . substr($data['WERKS'], 0, 1);
 							$insert[$i]['COMP_CODE'] = substr($data['WERKS'], 0, 2);
@@ -277,7 +278,6 @@ class ExportController extends Controller
 							$i++;
 						}
 					}
-
 					if (!empty($result_img['data'])) {
 						$loop_img = count($csv_data['TR_INSPECTION_IMG']) + 1;
 						foreach ($result_img['data'] as $img) {
@@ -310,30 +310,19 @@ class ExportController extends Controller
 								'NULL',
 								'NULL'
 							);
-
 							$csv_data['TR_INSPECTION_IMG'][$loop_img] = join(',', $raw_image);
 							$loop_img++;
-
-
 							// .............................
 							$count_tr_inspection_img++;
 						}
 					}
 
-
-
 					// File::append(public_path('/export/tap_dw/LOG-PUSH-REPORT-INSPECTION.txt'), join('[' . date('Y-m-d H:i') . '] Rows TR_INSPECTION = 100' . PHP_EOL));
-
 					// Storage::disk()->put('/files/LOG-PUSH-REPORT-INSPECTION.txt', '[' . date('Y-m-d H:i') . '] Rows TR_INSPECTION = 100' . PHP_EOL);
-
-
-
-					$my_file = File::append(public_path('/export/tap_dw/LOG-PUSH-REPORT-INSPECTION.txt'), '[' . date('Y-m-d H:i') . '] Rows TR_INSPECTION = 100' . PHP_EOL);
-					$handle = fopen($my_file, 'w') or die('Cannot open file:  ' . $my_file);
-					$data = '[' . date('Y-m-d H:i') . '] Rows TR_INSPECTION = {{$count_tr_inspection_img}}' . PHP_EOL;
-					fwrite($handle, $data);
-
-
+					// $my_file = File::append(public_path('/export/tap_dw/LOG-PUSH-REPORT-INSPECTION.txt'), '[' . date('Y-m-d H:i') . '] Rows TR_INSPECTION = 100' . PHP_EOL);
+					// $handle = fopen($my_file, 'w') or die('Cannot open file:  ' . $my_file);
+					// $data = '[' . date('Y-m-d H:i') . '] Rows TR_INSPECTION = {{$count_tr_inspection_img}}' . PHP_EOL;
+					// fwrite($handle, $data);
 
 					$loop_inspection = count($csv_data['TR_INSPECTION']) + 1;
 					foreach ($insert as $ins) {
@@ -364,27 +353,20 @@ class ExportController extends Controller
 							'SYSDATE',
 							'NULL'
 						);
-
 						$csv_data['TR_INSPECTION'][$loop_inspection] = join(',', $raw_inspection);
 						$loop_inspection++;
-
-
 						//....................................
 						$count_tr_inspection++;
 					}
-
 					$i = 1;
 					$loop_inspection_track = count($csv_data['TR_INSPECTION_PATH']) + 1;
 					if (!empty($data['TRACK'])) {
 						foreach ($data['TRACK'] as $track) {
-
 							if (intval($data['AREAL']) == 0) {
 								$data['AREAL'] = 0;
 							}
-
 							$track['LAT_TRACK'] = floatval($track['LAT_TRACK']);
 							$track['LONG_TRACK'] = floatval($track['LONG_TRACK']);
-
 							$raw_inspection_track = array(
 								'\'NATIONAL\'',
 								'\'0' . substr($data['WERKS'], 0, 1) . '\'',
@@ -412,11 +394,9 @@ class ExportController extends Controller
 								'SYSDATE',
 								'NULL'
 							);
-
 							$csv_data['TR_INSPECTION_PATH'][$loop_inspection_track] = join(',', $raw_inspection_track);
 							$loop_inspection_track++;
 							$i++;
-
 							//.........................................
 							$count_tr_inspection_phat++;
 						}
@@ -425,21 +405,19 @@ class ExportController extends Controller
 			}
 		}
 		$response['end_time'] = date('YmdHis');
-
-		// if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION.csv', join(PHP_EOL, $csv_data['TR_INSPECTION']))) {
-		// 	$response['status']['TR_INSPECTION'] = 'OK';
-		// }
-		// if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION_IMG.csv', join(PHP_EOL, $csv_data['TR_INSPECTION_IMG']))) {
-		// 	$response['status']['TR_INSPECTION_IMG'] = 'OK';
-		// }
-		// if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION_PATH.csv', join(PHP_EOL, $csv_data['TR_INSPECTION_PATH']))) {
-		// 	$response['status']['TR_INSPECTION_PATH'] = 'OK';
-		// }
-
+		if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION.csv', join(PHP_EOL, $csv_data['TR_INSPECTION']))) {
+			$response['status']['TR_INSPECTION'] = 'OK';
+		}
+		if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION_IMG.csv', join(PHP_EOL, $csv_data['TR_INSPECTION_IMG']))) {
+			$response['status']['TR_INSPECTION_IMG'] = 'OK';
+		}
+		if (Storage::disk('export_mobile_inspection')->put('TR_INSPECTION_PATH.csv', join(PHP_EOL, $csv_data['TR_INSPECTION_PATH']))) {
+			$response['status']['TR_INSPECTION_PATH'] = 'OK';
+		}
+		// print_r($csv_data);
 		// File::append(public_path('/export/tap_dw/TR_INSPECTION.csv'), join(PHP_EOL, $csv_data['TR_INSPECTION']) . PHP_EOL);
 		// File::append(public_path('/export/tap_dw/TR_INSPECTION_IMG.csv'), join(PHP_EOL, $csv_data['TR_INSPECTION_IMG']) . PHP_EOL);
 		// File::append(public_path('/export/tap_dw/TR_INSPECTION_PATH.csv'), join(PHP_EOL, $csv_data['TR_INSPECTION_PATH']) . PHP_EOL);
-
 		return response()->json($response);
 	}
 
@@ -676,14 +654,23 @@ class ExportController extends Controller
 	 * Untuk mengisi data Mobile Inspection di Database Oracle.
 	 * --------------------------------------------------------------------------
 	 */
-	public function sync_mobile_estate_tr_image()
+		public function sync_mobile_estate_tr_image()
 	{
 		$client = new \GuzzleHttp\Client();
-		$result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/' . date('Ym1') . '000000/' . date('Ymt') . '235959', [
+
+
+		$result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/' . date('Ym1') . '000000/' . date('Ymt') . '235959/estate', [
 			'headers' => [
 				'Authorization' => 'Bearer ' . $this->access_token
 			]
 		]);
+
+		// $result = $client->request('GET', $this->url[$this->env]['ebcc_validation'] . '/api/v1.1/export/tr-ebcc/20190926000000/20190926235959/estate', [
+		// 	'headers' => [
+		// 		'Authorization' => 'Bearer ' . $this->access_token
+		// 	]
+		// ]);
+
 		$result = json_decode($result->getBody(), true);
 		$response = array();
 		$response['message'] = 'MOBILE_ESTATE.TR_IMAGE';
@@ -692,9 +679,11 @@ class ExportController extends Controller
 		$response['num_rows'] = 0;
 
 		// print '<pre>';
-		// print_r($result);
+		// print_r(count($result['data']));
 		// print '</pre>';
 		// dd();
+
+
 
 		if ($result['status'] == true && !empty($result['data'])) {
 			foreach ($result['data'] as $data) {
@@ -706,8 +695,9 @@ class ExportController extends Controller
 				$result_img = json_decode($result_img->getBody(), true);
 
 				// print '<pre>';
-				// print_r($result_img);
+				// print_r($this->url[$this->env]['images'] . '/images/' . $data['EBCC_VALIDATION_CODE']);
 				// print '</pre>';
+
 
 				if (!empty($result_img['data'])) {
 					// print 'OK<br />';
@@ -718,7 +708,14 @@ class ExportController extends Controller
 							]
 						]);
 						$result_user = json_decode($result_user->getBody(), true);
+
+						// print '<pre>';
+						// print_r($result_user);
+						// print '</pre>';
+
 						$check = $this->tapapps_mobile_estate->select("SELECT COUNT( * ) AS JUMLAH FROM MOBILE_ESTATE.TR_IMAGE WHERE TR_CODE = '{$img_data['TR_CODE']}' AND ROWNUM = 1");
+
+
 
 						if ($check[0]->jumlah == 0) :
 							$raw['TR_CODE'] = $img_data['TR_CODE'];
@@ -728,6 +725,7 @@ class ExportController extends Controller
 							$raw['INSERT_TIME'] = date('d-m-Y', strtotime($data['INSERT_TIME']));
 							$raw['USER_LONG'] = floatval($data['LON_TPH']);
 							$raw['USER_LAT'] = floatval($data['LAT_TPH']);
+
 							$query_insert = "
 									INSERT INTO 
 										MOBILE_ESTATE.TR_IMAGE (
@@ -759,6 +757,8 @@ class ExportController extends Controller
 										NULL
 									)
 								";
+
+
 							$this->tapapps_mobile_estate->statement($query_insert);
 							$this->tapapps_mobile_estate->commit();
 
@@ -772,7 +772,6 @@ class ExportController extends Controller
 		$response['end_time'] = date('YmdHis');
 		return response()->json($response);
 	}
-
 	/**
 	 * MOBILE_INSPECTION.TR_PREMI_INSPECTION
 	 *
