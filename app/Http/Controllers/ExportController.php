@@ -806,9 +806,9 @@ class ExportController extends Controller
 			]
 		]);
 
-		// $result = $client->request('GET', $this->url[$this->env]['inspection'] . '/export/premi/20190926000000/20190926235959', [
+		// $result = $client->request( 'GET', $this->url[$this->env]['inspection'].'/export/premi/20190813000000/20190813235959', [
 		// 	'headers' => [
-		// 		'Authorization' => 'Bearer ' . $this->access_token
+		// 		'Authorization' => 'Bearer '.$this->access_token
 		// 	]
 		// ]);
 
@@ -820,7 +820,7 @@ class ExportController extends Controller
 		$result = json_decode($result->getBody(), true);
 
 		// print '<pre>';
-		// print_r(count($result));
+		// print_r($this->url[$this->env]['inspection'] . '/export/premi/' . date('Ymd') . '000000/' . date('Ymd') . '235959');
 		// print '</pre>';
 		// dd();
 
